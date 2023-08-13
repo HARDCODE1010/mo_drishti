@@ -1,0 +1,175 @@
+<html>
+  <head>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+
+    <title>Track Peronnels</title>
+    <meta name="viewport" content="initial-scale=1.0">
+    <meta charset="utf-8">
+    <style>
+        #map {
+            /* height: 100%;  */
+            width: 70%; 
+            height:500px; 
+            margin: auto; 
+        }
+
+        html,body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background-color: black;
+        }
+        #message {
+        font-size: 24px; /* Change font size to 24 pixels */
+          color: red; /* Change text color to blue */
+        }
+
+    </style>
+  </head>
+  <body>
+    <div class="container-fluid bg-dark text-light py-3">
+        <header class="text-center">
+            <h1 class="display-6">Ground Personnel Tracking</h1>
+        </header>
+    </div> <br />
+    <div>
+        <h4 class="headerOfCentroid" style="text-align: center;color: #ff8400;">Live Location of Personnels assigned</h4>
+        <br />
+    </div>
+    <div id="map"></div>
+    <div id="sidebar">
+      <h2 style="color: #ff8400;">Tresspassers</h2>
+      <div id="message"></div>
+    </div>
+    <!-- Firebase App (the core Firebase SDK) is always required and must be listed first -->
+    <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-app.js"></script>
+
+<!-- Add additional Firebase products that you want to use -->
+    <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-database.js"></script>
+    <script>
+
+    var map;
+    var marker;
+    var polygon;
+    var personnelList = [];
+
+    function initMap() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const id = urlParams.get('id');
+      console.log(id);
+      map = new google.maps.Map(document.getElementById('map'), {
+        center: {lat:20.275973273228757,lng: 85.77686396789552},
+        zoom: 12
+      });
+      var path = [];
+
+
+      // Fetch latitude and longitude data from API
+
+      fetch("http://34.224.74.238:8090/api/getCoordinates/"+id)
+        .then(response => response.json())
+        .then(data => {
+          console.log(data);
+          console.log(data.coordinatesList);
+          // Create polygon path using latitude and longitude data
+          var path = [];
+          for (var i = 0; i < data.coordinatesList.length; i++) {
+            path.push({lat: data.coordinatesList[i].latitude, lng: data.coordinatesList[i].longitude});
+          }
+          console.log(path);
+          // Add polygon to map
+          polygon = new google.maps.Polygon({
+            map: map,
+            paths: path,
+            fillColor: '#FF0000',
+            fillOpacity: 0.3,
+            strokeColor: '#FF0000',
+            strokeOpacity: 0.8,
+            strokeWeight: 2
+          });
+        });
+
+      // Add marker to map
+      marker = new google.maps.Marker({
+        position: {lat: 20.277638859037218, lng: 85.77731457901002},
+        map: map,
+        draggable: true
+      });
+
+      // Check if marker is outside the polygon when it is dragged
+      google.maps.event.addListener(marker, 'drag', function() {
+        checkMarkerPosition();
+      });
+
+      // Check if marker is outside the polygon when it is moved by the user
+      google.maps.event.addListener(marker, 'mouseup', function() {
+        checkMarkerPosition();
+      });
+    }
+    //config key for firebase
+    const firebaseConfig = {
+  apiKey:"AIzaSyDiJu9dWfW_YdnV77_v9fSv8hdKDtk1aKg",
+  authDomain: "gpsdata-fetch-feed.firebaseapp.com",
+  databaseURL: "https://gpsdata-fetch-feed-default-rtdb.firebaseio.com",
+  projectId: "gpsdata-fetch-feed",
+  storageBucket: "gpsdata-fetch-feed.appspot.com",
+  messagingSenderId: "705742867371",
+  appId: "1:705742867371:web:e31753206320d190a1a0ee",
+  measurementId: "G-93XD5QH1H9"
+};
+
+    firebase.initializeApp (firebaseConfig);
+
+    const database = firebase.database();
+    const isinsideRef = database.ref("isinside");
+
+    function checkMarkerPosition() {
+      var isInside = google.maps.geometry.poly.containsLocation(marker.getPosition(), polygon);
+      var messageDiv = document.getElementById("message");
+
+  if (!isInside) {
+
+    messageDiv.innerHTML = "<img src='images/danger.jpg' alt='warning' style='width:30px;height:30px;margin-right:10px;'>Navneet is breaching the limits!";
+    isinsideRef.set(false);
+
+  } else {
+
+    messageDiv.innerHTML = "";
+    isinsideRef.set(true);
+
+  }
+}
+
+    // Add police personnel to list and map
+    function addPersonnel(name, lat, lng) {
+      var personnel = {lat: lat, lng: lng};
+      personnelList.push(personnel);
+      var listItem = document.createElement("li");
+      listItem.innerHTML = name;
+      document.getElementById("personnelList").appendChild(listItem);
+      var personnelMarker = new google.maps.Marker({
+        position: personnel,
+        map: map,
+        title: name,
+        icon: "https://maps.google.com/mapfiles/ms/icons/blue-dot.png"
+      });
+    }
+
+    // Load the map
+    google.maps.event.addDomListener(window, 'load', function() {
+      initMap();
+
+
+  // Add police personnel
+  addPersonnel("John Smith", 37.772, -122.408);
+  addPersonnel("Jane Doe", 37.785, -122.417);
+  addPersonnel("Bob Johnson", 37.764, -122.421);
+});
+
+
+
+
+    </script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAQ92_ZPWl9oq6sQUYCRyPPJzARjwLN-cY&callback=initMap" async defer></script>
+  </body>
+</html>

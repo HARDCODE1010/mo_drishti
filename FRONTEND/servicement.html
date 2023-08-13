@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+    
+    <title>Servicement</title>
+    
+  </head>
+  <body>
+    
+   <div class="container-fluid bg-dark text-light py-3">
+       <header class="text-center">
+           <h1 class="display-6">Ground Personnel Tracking</h1>
+       </header>
+   </div><br />
+   <div class="row">
+    <div class="column">
+        <h4 class="headerforselection" style="color: #ff8400;">Select the Personnels to be sent</h4>
+        <section class="container my-2 bg-orange w-60 text-light p-2">
+            
+                <div class="col-md-6">
+                  <label for="designation" class="form-label">Designation</label>
+                  <select id="designation" class="form-select" onchange="fetchTodo()"><br />
+                    <!-- <option selected></option> -->
+                    <option>IPS</option>
+                    <option>Inspector</option>
+                    <option>PoliceGuard</option>
+                  </select>
+                </div>
+                <br />
+                <div class="col-12 container" id="fetchedTodo" style="background-color: black; width: auto;">
+                  <div class="police-list" >
+                    <p>Select a police personnel:</p>
+                    <ul id="available"></ul>
+                  </div>
+                </div>
+                
+              
+           </section>
+    </div>
+    <div class="column">
+        <h4 class="headerforselection2" style="color: #ff8400;">Selected Personnels</h4>
+        <section class="container my-2 bg-dark w-80 text-light p-2">
+          <div class="selected-police">
+            <p>Selected police personnel:</p>
+            <ul id="selected"></ul>
+          </div>
+            <form action="./centroid.html">
+              <div class="col-12">
+                <button type="submit" class="btn btn-primary">Submit</button>
+              </div>
+            </form>
+            
+        </section>
+    </div>   
+   </div>
+  </body>
+  <script>
+    var availableList = document.getElementById('available');
+		const selectedList = document.getElementById('selected');
+    function fetchTodo(){
+  
+      availableList.innerHTML = '';
+      var designa = document.getElementById('designation').value
+      
+      console.log("give_your_url_here?designation="+designa)
+      console.log("inside fetchTodo function")
+
+    // Retrieve police personnel data from the server
+		fetch('http://34.224.74.238:8090/api/available/'+designa)
+			.then(response => response.json())
+			.then(data => {
+				// Populate the available police personnel list with data
+				data.forEach(person => {
+					const listItem = document.createElement('li');
+					listItem.textContent = person.name;
+					availableList.appendChild(listItem);
+				});
+        console.log(availableList);
+			})
+			.catch(error => console.log(error));
+    }
+
+		// Move selected police personnel from available to selected list
+		availableList.addEventListener('click', event => {
+			if (event.target.tagName === 'LI') {
+				selectedList.appendChild(event.target);
+			}
+		});
+
+		// Move deselected police personnel from selected to available list
+		selectedList.addEventListener('click', event => {
+			if (event.target.tagName === 'LI') {
+				availableList.appendChild(event.target);
+			}
+		});
+  </script>
+  <style>
+    .bg-orange {
+  background-color: #ff8400;
+}
+    .column {
+    float: left;
+    width: 50%;
+  }
+  .headerforselection{
+    /* left: 20px; */
+    margin-left: 10px;
+  }
+  /* Clear floats after the columns */
+  .row:after {
+    content: "";
+    display: table;
+    clear: both;
+  }
+  .headerforselection2{
+    margin-left: 100px;
+  }
+  body {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			height: 100vh;
+			margin: 0;
+			padding: 0;
+      background-image: url('./images/drishti.png');
+      background-size: cover;
+      background-position: center;
+		}
+
+		h2 {
+			text-align: center;
+			margin-top: 20px;
+		}
+
+		.container {
+			display: flex;
+			flex-direction: row;
+			align-items: center;
+			max-width: 800px;
+			margin: 0 auto;
+			box-shadow: 0 0 10px rgba(0,0,0,0.2);
+			border-radius: 10px;
+			overflow: hidden;
+			margin-top: 50px;
+      
+     
+		}
+
+		.police-list {
+			margin-right: 100px;
+
+		}
+
+		.police-list ul {
+			list-style-type: none;
+			margin: 0;
+			padding: 0;
+		}
+
+		.police-list li {
+			padding: 5px 10px;
+			border: 1px solid white;
+			cursor: pointer;
+		}
+
+		.police-list li:hover {
+			background-color: #f2f2f2;
+		}
+
+		.selected-police {
+			flex: 1;
+			text-align: center;
+      
+		}
+
+		.selected-police ul {
+			list-style-type: none;
+			margin: 0;
+			padding: 0;
+      background-color: black;
+		}
+
+		.selected-police li {
+			margin-bottom: 5px;
+			padding: 5px 10px;
+			background-color: black;
+			border: 1px solid white;
+			border-radius: 5px;
+			cursor: pointer;
+		}
+
+		.selected-police li:hover {
+			background-color: #e2e2e2;
+		}
+  </style>
+</html>
